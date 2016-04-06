@@ -1,0 +1,4 @@
+LOGS=/data/mesos/log
+ULIMIT="-n 655350"
+
+MESOS_WORK_DIR=/data/mesos

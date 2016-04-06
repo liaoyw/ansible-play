@@ -1,0 +1,25 @@
+---
+# ansible-playbook install_zk.yml -s
+- hosts: zk
+  vars:
+    zk_version: 3.4.8
+    zk_url: http://192.168.65.11/rpm/zookeeper-{{zk_version}}.tar.gz
+    zk_dir: /data/zookeeper-{{zk_version}}
+
+  tasks:
+    - name: unarchieve zookeeper
+      unarchive: src={{zk_url}} dest=/data/ owner=www-data copy=no
+    - name: add zoo.cfg
+      template: src=files/zoo.cfg.j2 dest={{zk_dir}}/conf/zoo.cfg owner=www-data
+    - name: create data dir
+      file: name={{zk_dir}}/data state=directory owner=www-data
+    - name: create server id
+      shell: echo {{id}} > {{zk_dir}}/data/myid && chown www-data {{zk_dir}}/data
+    - name: add service file
+      template: src="files/zookeeper.service.j2" dest="/usr/lib/systemd/system/zookeeper.service"
+      register: service
+    - name: notify systemd of config changes
+      command: systemctl daemon-reload
+      when: service.changed == True
+    - name: start zookeeper and set to start on startup
+      service: name=zookeeper state=restarted enabled=yes

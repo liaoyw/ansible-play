@@ -1,0 +1,23 @@
+---
+
+# ansible-playbook -e 'mtype=slave/master' install_mesos.yml -s
+- hosts: "{{mtype}}"
+  vars:
+    mesos_url: http://192.168.65.11/rpm/mesos-0.28.0-2.0.16.centos701406.x86_64.rpm
+  
+  tasks:
+    - name: install mesos rpm
+      yum: name={{mesos_url}} state=present
+    - name: create mesos work dir
+      file: name=/data/mesos state=directory
+    - name: clean useless options
+      shell:  rm -f /etc/mesos-{{mtype}}/*
+    - name: set zk url
+      shell: echo 'zk://192.168.65.93:2181,192.168.65.95:2181,192.168.65.96:2181/mesoscluster' > /etc/mesos/zk
+    - name: copy config files
+      copy: src={{item}} dest=/etc/default/{{item|basename}}
+      with_fileglob:
+        - files/mesos*
+    - name: start {{mtype}}
+      service: name=mesos-{{mtype}} state=restarted enabled=yes
+      #when: "'{{mtype}}' == 'slave'"

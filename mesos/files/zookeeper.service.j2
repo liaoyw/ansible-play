@@ -1,0 +1,17 @@
+[Unit]
+Description=Apache ZooKeeper
+After=network.target
+
+[Service]
+Environment="ZOOCFGDIR={{zk_dir}}/conf"
+Environment="JMXPORT=19061"
+Environment="ZOO_LOG4J_PROP=INFO,ROLLINGFILE"
+SyslogIdentifier=zookeeper
+WorkingDirectory={{zk_dir}}
+ExecStart={{zk_dir}}/bin/zkServer.sh start-foreground
+Restart=on-failure
+RestartSec=20
+User=www-data
+
+[Install]
+WantedBy=multi-user.target
